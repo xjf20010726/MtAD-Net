@@ -25,7 +25,7 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
             del self.norm  # remove the original norm
         self.my_head=nn.Sequential(
             nn.Linear(self.embed_dim,self.num_classes),
-            nn.Softmax(dim=1),
+            # nn.Softmax(dim=1),
             )
         
     def forward_features(self, x):
@@ -51,6 +51,7 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
     def forward(self, x):
         x = self.forward_features(x)
         x=self.my_head(x/1)
+        x=torch.softmax(x/8,dim=1)
         return x
 
 
