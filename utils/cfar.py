@@ -35,20 +35,7 @@ def cfar(read_path,annotations_file,save_t_path,save_img_path,Pro=0.01):
         clutter4=clutter4.flatten()
         clutter=np.concatenate((clutter1,clutter2,clutter3,clutter4),axis=0)
         clutter=np.sort(clutter)
-        # clutter=clutter[:int(1-np.sum(clutter>250)/len(clutter))*len(clutter)]
-        if np.sum(clutter>250)>=0.5*len(clutter):
-            clutter=clutter[:int(len(clutter)*0.5)]
-        elif np.sum(clutter>250)>=0.4*len(clutter):
-            clutter=clutter[:int(len(clutter)*0.6)]
-        elif np.sum(clutter>250)>=0.3*len(clutter):
-            clutter=clutter[:int(len(clutter)*0.7)]
-        elif np.sum(clutter>250)>=0.2*len(clutter):
-            clutter=clutter[:int(len(clutter)*0.8)]
-        elif np.sum(clutter>250)>=0.1*len(clutter):
-            clutter=clutter[:int(len(clutter)*0.9)]
-        else:
-            clutter=clutter[:int(len(clutter)*0.95)]
-        # clutter=clutter[:int(len(clutter)*0.99)]
+        clutter=clutter[:int(len(clutter)*0.95)]
         hist, bin_edges=np.histogram(clutter,bins=256,range=(0,255),density=False)
         # print(hist,bin_edges.shape)
         # cdf = hist.cumsum()#累加频数得累计直方图
