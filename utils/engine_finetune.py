@@ -72,16 +72,7 @@ def test_one_epoch(model_vit:torch.nn.Module,
             # print(y)
             # print(predict)
             B,C,W,H=f_map.shape
-            if args.MCTM:
-                Thr=(predict*y).sum(dim=1)
-
-            else:
-                tmp_t=torch.zeros_like(y)
-                for jjj in range(y.shape[1]):
-                    tmp_t[:,jjj]=50*((jjj))/255
-                    if jjj==0:
-                        tmp_t[:,jjj]=10/255
-                Thr=(tmp_t*y).sum(dim=1)
+            Thr=(predict*y).sum(dim=1)
             result=torch.zeros(X_unet.shape[0],X_unet.shape[2],X_unet.shape[3]).to(args.device)
             f_map=f_map.view(B,C,-1).permute(0,2,1)
             f_map=f_map.cpu().numpy()
