@@ -48,10 +48,10 @@ class VisionTransformer(timm.models.vision_transformer.VisionTransformer):
             outcome = x[:, 0]
 
         return outcome
-    def forward(self, x):
+    def forward(self, x,tau):
         x = self.forward_features(x)
         x=self.my_head(x/1)
-        x=torch.softmax(x/8,dim=1)
+        x=torch.softmax(x/tau,dim=1)
         return x
 
 

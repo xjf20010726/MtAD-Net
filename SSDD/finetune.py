@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3" 
+os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6,7" 
 # os.environ["WORLD_SIZE"] = "1"
 import sys
 sys.path.append('..')
@@ -20,8 +20,6 @@ import torch.optim.lr_scheduler as lr_scheduler
 from datetime import timedelta
 from tqdm             import tqdm
 import math
-
-from utils.train_test_utils import *
 from utils.weights_init import *
 from utils.save_load_model import *
 from utils import my_dataset
@@ -49,9 +47,6 @@ def main(args):
     transform = transforms.Compose([
         transforms.Resize([96,96]),
         transforms.ToTensor(),
-        #transforms.Resize((512,512))
-        # transforms.Normalize([0.432284, 0.4364989, 0.36451283], [ 0.24840787, 0.23247136, 0.24171728]),
-        #transforms.Normalize([ 0.1583,  0.1583, 0.1583], [ 0.0885,  0.0885,  0.0885])
         ])
     transform1 = transforms.Compose([
         transforms.ToTensor(),
@@ -63,7 +58,6 @@ def main(args):
         annotations_file="/home/XJF/code/SSDD_Seg/data/train.txt",
         img_dir="/home/XJF/code/SSDD_Seg/data/train/img",
         threshold_dirs=train_thr_dirs,
-        # index_dir='/home/XJF/SAR_Ground_Truth/data/BSR/BSDS500/SupIndexs',
         transform=transform,
         target_transform=transform1
     )
@@ -76,7 +70,6 @@ def main(args):
         annotations_file="/home/XJF/code/SSDD_Seg/data/test.txt",
         img_dir="/home/XJF/code/SSDD_Seg/data/test/img",
         threshold_dirs=test_thr_dirs,
-        # index_dir='/home/XJF/SAR_Ground_Truth/data/BSR/BSDS500/SupIndexs',
         transform=transform,
         target_transform=transform1
     )
@@ -86,25 +79,25 @@ def main(args):
     Save=SaveModel()
     Load=LoadModel()
     device = args.device
-    #导入模型，后续需要换成U-Net
+    print(device)
+    #初始化模型
 
     model_vit=vit_finetune.vit_finetune(num_classes=5)
-    model_unet=unet_finetune.unet_finetune()
-    checkpoint_vit=torch.load(args.weight_vit,map_location='cpu')
-    pretrain_vit = checkpoint_vit['model']
-    checkpoint_unet=torch.load(args.weight_unet,map_location='cpu')
-    pretrain_unet = checkpoint_unet['model']
-    # vit_dict=pretrain_vit.state_dict()
-    # unet_dict=pretrain_unet.state_dict()
 
-    model_vit.load_state_dict(pretrain_vit,strict=False)
-    model_unet.load_state_dict(pretrain_unet,strict=False)
+    model_unet=unet_finetune.unet_finetune()
+    # 加入预训练权重
+    # checkpoint_vit=torch.load(args.weight_vit,map_location='cpu')
+    # pretrain_vit = checkpoint_vit['model']
+    # checkpoint_unet=torch.load(args.weight_unet,map_location='cpu')
+    # pretrain_unet = checkpoint_unet['model']
+
+    # model_vit.load_state_dict(pretrain_vit,strict=False)
+    # model_unet.load_state_dict(pretrain_unet,strict=False)
 
     model_vit.to(device)
-    # print(model_vit.parameters().device)
+
     model_unet.to(device)
     #定义损失函数和梯度优化，后续换自己的损失函数
-    # loss_fn = nn.CrossEntropyLoss()
     #自己的损失函数
     loss_fn=FinetuneLoss.FinetuneLoss()
     optimizer=optim.Adam(params=[{'params':model_vit.parameters()},{'params':model_unet.parameters()}],lr=args.lr)
@@ -118,8 +111,8 @@ def main(args):
     if args.if_load:
         #只加载模型参数
         if args.if_checkpoint==0:
-            model_vit=Load.load(args.result+args.load_model_name1)
-            model_unet=Load.load(args.result+args.load_model_name2)
+            model_vit=Load.load(args.result+args.load_model_name1,device)
+            model_unet=Load.load(args.result+args.load_model_name2,device)
         #加载所有参数
         else :
             model_vit,optimizer,scheduler,args.start_epoch,loss_fn=Load.load_checkpoint(args.result+'0'+args.load_model_name1,model_vit,optimizer,scheduler)
@@ -146,8 +139,6 @@ def main(args):
         
         if val==-1:
             break 
-        # if (i%16==0) or i==(args.epochs-1):
-        #     print("test")
         
         test_loss=test_one_epoch(model_vit=model_vit,model_unet=model_unet,dataloader=test_dataloader,loss=loss_fn,device=device,epoch=i+1,args=args)
         scheduler.step()
@@ -204,6 +195,9 @@ if __name__ == "__main__":
     
     parser.add_argument('--seed', default=1,type=int,help='seed for initializing training. ')
     parser.add_argument('--if_load',default=0,type=int)
+    parser.add_argument('--tmp',default=4,type=int)
+    parser.add_argument('--tau_train',default=2,type=int)
+    parser.add_argument('--tau_test',default=5,type=int)
     parser.add_argument('--device',default='cuda:0',type=str)
     parser.add_argument('--result',default='/home/XJF/code/SSDD_Seg/results/Model',type=str)
     parser.add_argument('--save_model_name1',default='CNN.pth',type=str)
@@ -212,10 +206,10 @@ if __name__ == "__main__":
     parser.add_argument('--load_model_name2',default='CNN.pth',type=str)
     parser.add_argument('--if_checkpoint',default=0,type=int)
     parser.add_argument('--fig_save_path',default="/home/XJF/code/SSDD_Seg/results/fig_results_vit_unet_cfar_kmeans",type=str)
-    # parser.add_argument('--Fb_save_path',default="/home/XJF/SAR_Ground_Truth/results/Fb_results/slic_result.txt",type=str)
     parser.add_argument('--if_test',default=0,type=int)
     parser.add_argument('--weight_vit',default='/home/XJF/code/mae/output_dir/checkpoint-0.pth',type=str)
     parser.add_argument('--weight_unet',default='/home/XJF/code/mae/output_unet_dir/checkpoint-0.pth',type=str)
+    parser.add_argument('--MCTM',default=1,type=int)
     args = parser.parse_args()
     print(args)
     main(args)

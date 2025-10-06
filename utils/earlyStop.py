@@ -4,16 +4,16 @@ import os
 from utils.save_load_model import *
 class EarlyStopping:
     """Early stops the training if validation loss doesn't improve after a given patience."""
-    def __init__(self, save_path, patience=5, verbose=False, delta=0):
+    def __init__(self, save_path, patience=5, verbose=False, delta=1e-3):
         """
         Args:
             save_path : 模型保存文件夹
             patience (int): How long to wait after last time validation loss improved.
-                            Default: 7
+                            Default: 5
             verbose (bool): If True, prints a message for each validation loss improvement. 
                             Default: False
             delta (float): Minimum change in the monitored quantity to qualify as an improvement.
-                            Default: 0
+                            Default: 1e-3
         """
         self.save_path = save_path
         self.patience = patience
