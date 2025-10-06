@@ -34,16 +34,11 @@ class FinetuneLoss(nn.Module):
         neg_mask=neg_mask.view(b,w*h,c)
         mask=mask@mask.permute(0,2,1)
         neg_mask=neg_mask@neg_mask.permute(0,2,1)
-        # pos_index=torch.where(mask==1)
         Dot_pos=Dot*mask
         Dot_neg=Dot*neg_mask
-        # neg_index=torch.where(neg_mask==1)
-        # print(Dot.shape)
         loss_pos=Dot_pos.sum(dim=(-1,-2))+Dot_neg.sum(dim=(-1,-2))
-        # loss_pos=Dot[pos_index].sum(dim=-1).sum(dim=-1)+Dot[neg_index].sum(dim=(-1,-2))
         loss_all=Dot.sum(dim=(-1,-2))
         loss=loss_pos/loss_all
-        # print(loss)
         return loss
     def forward(self,X,f_map,threshold,predict):
         b,l=threshold.shape
